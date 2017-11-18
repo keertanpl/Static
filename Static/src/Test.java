@@ -19,7 +19,7 @@ class A{
 		//Git sample git  comment
 		//Git sample git branch000001
 		//fsdfsdfsdfsdfdsfkkkkkkkkdsfsfds
-		/gdhhhgfhfghfghfghgfhfghfghfg
+		//gdhhhgfhfghfghfghgfhfghfghfg
 	}
 	}
 	public A()
