@@ -16,7 +16,8 @@ class A{
 		/* Can have 2 iner class (STtaic & Non static inner class,Also to create the ob jcet we need inner class)
 		 * 
 		 */
-		//Git sample comment
+		//Git sample git  comment
+		//Git sample git branch
 	}
 	}
 	public A()
