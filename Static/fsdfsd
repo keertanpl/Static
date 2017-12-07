@@ -1,0 +1,309 @@
+using System;
+using Coypu;
+using OpenQA.Selenium;
+
+namespace Framework_01.BrowserAction
+{
+    class BrowserAction
+    {
+        internal static void SendCommand(BrowserSession browser, string locator, string webElementType, string value)
+        { 
+            switch (webElementType)
+            {
+
+
+                case "TextBox":
+                    browser.FillIn(locator).With(value);
+                    break;
+
+
+                case "Button":
+                    browser.ClickButton(locator);
+                    break;
+
+                case "DropDown":
+                    browser.Select(value).From(locator);
+                    break;
+
+            }
+        }
+    }
+}
+
+
+
+
+
+using Framework_01.Utility;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+namespace Framework_01.ObjectRepository
+{
+    public class ObjectRepository
+    {
+
+        static Dictionary<int, String> objectRepository = new Dictionary<int, string>();
+        //static int key1, key2, i;
+        static int i;
+        //static string value, question, locator, elementType;
+        static StringBuilder repositoryQuestion, repositoryValue, repositoryLocator;
+        public static void CreateObjectRepository()
+        {
+            i = 1;
+            repositoryQuestion = new StringBuilder("");
+            repositoryValue = new StringBuilder("");
+            repositoryLocator = new StringBuilder("");
+
+
+
+            ExcelUtil.SetExcelFile("C:\\project_framework\\Framework_01\\Framework_01\\Test.xlsx", 1);
+            do
+            {
+                repositoryQuestion.Clear();
+                repositoryValue.Clear();
+                repositoryLocator.Clear();
+
+                repositoryQuestion.Append(ExcelUtil.GetCellData(i, 1));
+                // if (ExcelUtil.GetCellData(i, 2) == null)
+                //  {
+                // repositoryValue.Append("");
+                //}
+                //else
+                //{
+                repositoryValue.Append(ExcelUtil.GetCellData(i, 2));
+                /// }
+
+                repositoryLocator.Append(ExcelUtil.GetCellData(i, 3));
+                //    objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode() + (repositoryValue.ToString()).GetHashCode()), repositoryLocator.ToString());
+                objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode()), repositoryLocator.ToString());
+                repositoryLocator.Clear();
+                repositoryLocator.Append(ExcelUtil.GetCellData(i, 4));
+                //objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode() + (repositoryValue.ToString()).GetHashCode() + 10), repositoryLocator.ToString());
+                objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode()) + 10, repositoryLocator.ToString());
+
+                i++;
+            }
+            while (!(ExcelUtil.GetCellData(i, 1) == null));
+
+            ExcelUtil.CloseExcelFile();
+            Console.WriteLine("Object Repository Created / Updated Successfully");
+
+            FileStream fs = new FileStream("C:\\project_framework\\Framework_01\\Framework_01\\objectrepository.binary", FileMode.Create, FileAccess.Write, FileShare.None);
+            BinaryFormatter bf = new BinaryFormatter();
+
+            bf.Serialize(fs, objectRepository);
+            fs.Close();
+
+
+
+            //To read the data from binary file
+            FileStream fsin = new FileStream("C:\\project_framework\\Framework_01\\Framework_01\\objectrepository.binary", FileMode.Open, FileAccess.Read, FileShare.None);
+            objectRepository = (Dictionary<int, string>)bf.Deserialize(fsin);
+            //Console.WriteLine(objectRepository[(repositoryQuestion.ToString()).GetHashCode() + (repositoryValue.ToString()).GetHashCode()]);
+
+            // Console.WriteLine(objectRepository[((repositoryQuestion.ToString()).GetHashCode() + (repositoryValue.ToString()).GetHashCode() + 10)]);
+            fsin.Close();
+
+        }
+
+
+
+    }
+}
+
+using Coypu;
+using Framework_01.Utility;
+
+using NUnit.Framework;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Threading;
+
+namespace Framework_01.TestController
+{
+
+    public class TestControl
+    {
+        static BrowserSession browser;
+        static Dictionary<int, string> objectRepository = new Dictionary<int, string>();
+        static FileStream fsin;
+        static int testCaseNumber, testDataRow, testDataCount;
+
+        [SetUp]
+        public void SetUp()
+        {
+            ObjectRepository.ObjectRepository.CreateObjectRepository();
+            var bf = new BinaryFormatter();
+            fsin = new FileStream("C:\\project_framework\\Framework_01\\Framework_01\\objectrepository.binary", FileMode.Open, FileAccess.Read, FileShare.None);
+
+            objectRepository = (Dictionary<int, string>)bf.Deserialize(fsin);
+            fsin.Close();
+            System.Console.Write("setup");
+            browser = BrowserUtil.GetBrowserSession("Chrome");
+
+        }
+        [Test, TestCaseSource("TestData")]
+        public void TestMethod2(List<string> ar1)
+        {
+            System.Console.WriteLine(ar1[1].ToString());
+            testDataCount = 1;
+            browser.Visit("https://www2.my.test2.commbiz.online.cba/logon/usermaintenance/login.aspx "); 
+            ExcelUtil.SetExcelFile("C:\\project_framework\\Framework_01\\Framework_01\\TestData.xlsx", 1);
+            do
+            {
+
+                if (ar1[testDataCount - 1] != null || ar1[testDataCount - 1] != "")
+                {
+
+
+                    BrowserAction.BrowserAction.SendCommand(browser, objectRepository[ExcelUtil.GetCellData(testDataCount + 1, 1).GetHashCode()], objectRepository[ExcelUtil.GetCellData(testDataCount + 1, 1).GetHashCode() + 10], ar1[testDataCount - 1]);
+
+
+
+                }
+                testDataCount++;
+
+            } while (testDataCount <= ar1.Count);
+
+            ExcelUtil.CloseExcelFile();
+            browser.Dispose();
+
+
+        }
+        private static IEnumerable<TestCaseData> TestData
+        {
+
+            get
+            {
+                ExcelUtil.SetExcelFile("C:\\project_framework\\Framework_01\\Framework_01\\TestData.xlsx", 1);
+                List<string> ar1 = new List<string>();
+
+                testCaseNumber = 2;
+                do
+                {
+                    testDataRow = 2;
+                    do
+                    {
+                        System.Console.WriteLine(ExcelUtil.GetCellData(testDataRow, testCaseNumber));
+                        ar1.Add(ExcelUtil.GetCellData(testDataRow, testCaseNumber));
+                        testDataRow = testDataRow + 1;
+                    } while (!(ExcelUtil.GetCellData(testDataRow, testCaseNumber) == null));
+
+                    testCaseNumber = testCaseNumber + 1;
+
+                    yield return new TestCaseData(ar1).SetName("Test case" + testCaseNumber);
+                } while (!(ExcelUtil.GetCellData(1, testCaseNumber) == null));
+                ExcelUtil.CloseExcelFile();
+            }
+
+        }
+        [TearDown]
+        public void CleanUp()
+        {
+            System.Console.Write("CleanUp");
+        }
+    }
+}
+
+
+
+
+using Coypu;
+using Coypu.Drivers.Selenium;
+
+namespace Framework_01.Utility
+{
+   class BrowserUtil
+    {
+
+        public static BrowserSession GetBrowserSession(string browserType)
+        {
+
+            var sessionConfiguration = new SessionConfiguration();
+            sessionConfiguration.Driver = typeof(SeleniumWebDriver);
+            switch (browserType)
+            {
+                case "Chrome":
+                    sessionConfiguration.Browser = Coypu.Drivers.Browser.Chrome;
+                    break;
+                case "Firefox":
+                    sessionConfiguration.Browser = Coypu.Drivers.Browser.Firefox;
+                    break;
+
+                case "Iexplorer":
+                    sessionConfiguration.Browser = Coypu.Drivers.Browser.InternetExplorer;
+                    break;
+
+            }
+
+            return (new BrowserSession(sessionConfiguration));
+
+
+        }
+    }
+}
+
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+using Excel = Microsoft.Office.Interop.Excel;
+
+namespace Framework_01.Utility
+{
+    public class ExcelUtil
+    {
+        public static string value;
+        static Excel.Application xlApp;
+        static Excel.Workbook xlWorkbook;
+        static Excel._Worksheet xlWorksheet;
+        static Excel.Range xlRange;
+
+        public static void SetExcelFile(string filePath, int sheetNumber)
+        {
+            xlApp = new Excel.Application();
+            xlWorkbook = xlApp.Workbooks.Open(filePath);
+            xlWorksheet = (Excel.Worksheet)xlWorkbook.Sheets[sheetNumber];
+            xlRange = xlWorksheet.UsedRange;
+        }
+        public static void CloseExcelFile()
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Marshal.ReleaseComObject(xlRange);
+            Marshal.ReleaseComObject(xlWorksheet);
+
+            xlWorkbook.Close();
+            Marshal.ReleaseComObject(xlWorkbook);
+
+            xlApp.Quit();
+            Marshal.ReleaseComObject(xlApp);
+
+        }
+        public static String GetCellData(int row, int col)
+        {
+
+
+            value = ((Excel.Range)xlWorksheet.Cells[row, col]).Value;
+
+
+            //Console.WriteLine("Value is" + value);
+
+            return value;
+        }
+
+    }
+}
+
+
