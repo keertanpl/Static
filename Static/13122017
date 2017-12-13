@@ -1,0 +1,422 @@
+
+Testdata will be copied to bin\T5 folder  take teh test adat from taht location
+Then build the tests 
+Add the copy comamND IN buidl eveents section
+
+
+- Install configuration transform
+- Create the different configuaruion amnagers items (Eg. T5,T2, etc)
+- To add an application configuration file to your C# project
+On the menu bar, choose Project, Add New Item.
+The Add New Item dialog box appears.
+Expand Installed, expand Visual C# Items, and then choose the Application Configuration File template.
+In the Name text box, enter a name, and then choose the Add button.
+A file that's named app.config is added to your project.
+
+- Right click the App.config then Click Add config trnasform
+
+
+
+using System;
+using Coypu;
+using OpenQA.Selenium;
+
+namespace Framework_01.BrowserAction
+{
+    class BrowserAction
+    {
+        internal static void SendCommand(BrowserSession browser, string locator, string webElementType, string value)
+        {
+            switch (webElementType)
+            {
+                case "TextBox":
+                    browser.FillIn(locator).With(value);
+                    break;
+                case "Button":
+                    browser.ClickButton(locator);
+                    break;
+                case "DropDown":
+                    browser.Select(value).From(locator);
+                    break;
+            }
+        }
+    }
+}
+
+using System.Configuration;
+
+namespace Framework_01.Config
+{
+    public class ApplicationConfiguration
+    {
+        public static string Browser_Name
+        { get { return ConfigurationManager.AppSettings["BaseUrl"]; } }
+        public static string Url_MSC
+        { get { return ConfigurationManager.AppSettings["Url_MSC"]; } }
+        public static string Environment
+        { get { return ConfigurationManager.AppSettings["Environment"]; } }
+
+        public static string UrlOTP
+        { get { return ConfigurationManager.AppSettings["UrlOTP"]; } }
+
+        public static string UrlBase_Legacy
+        { get { return ConfigurationManager.AppSettings["UrlBase_Legacy"]; } }
+
+        public static bool UseProxy
+        { get { return ConfigurationManager.AppSettings["UseProxy"] == "1"; } }
+
+        public static string ProdStandardChannelProxy
+        { get { return ConfigurationManager.AppSettings["ProdStandardChannelProxy"]; } }
+
+        public static string ProdNetlockChannelProxy
+        { get { return ConfigurationManager.AppSettings["ProdNetlockChannelProxy"]; } }
+
+        public static string ProxyPort
+        { get { return ConfigurationManager.AppSettings["ProxyPort"]; } }
+
+        public static bool UseSoftToken
+        { get { return ConfigurationManager.AppSettings["UseSoftToken"] == "1"; } }
+
+        public static string ChromeBinariesSystemLocation
+        {
+            get { return System.Environment.GetEnvironmentVariable("CHROME_EXE"); }
+        }
+
+        //public static string[] ProdTokens
+        //{ get { return ConfigurationManager.AppSettings["ProdTokens"].Split(',').Select(n => n.ToString()).ToArray(); } }
+
+        public static string VascoKey
+        { get { return ConfigurationManager.AppSettings["VascoKey"]; } }
+
+        // adding for take screenshot
+        public static bool IsScreenShotEnabled
+        { get { return ConfigurationManager.AppSettings["IsEnableScreenShot"] == "yes"; } }
+        public static string DBHost
+        { get { return ConfigurationManager.AppSettings["DBHost"] = "cst2.db.test.cba"; } }
+
+        public static string DBPort
+        { get { return ConfigurationManager.AppSettings["DBPort"] = "1521"; } }
+
+
+        public static string DBServicename
+        { get { return ConfigurationManager.AppSettings["DBServicename"] = "CST2.commsec.com.au"; } }
+
+
+        public static string DBUsername
+        { get { return ConfigurationManager.AppSettings["DBUsername"] = "pfs_support"; } }
+
+
+        public static string DBPassword
+        { get { return ConfigurationManager.AppSettings["DBPassword"] = "support"; } }
+    
+    }
+}
+
+
+using Framework_01.Utility;
+using Framework_01.Config;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+namespace Framework_01.ObjectRepository
+{
+    public class ObjectRepository
+    {
+        static Dictionary<int, String> objectRepository = new Dictionary<int, string>();
+        static int i, pageCount, pageCounter;
+        static StringBuilder repositoryQuestion, repositoryValue, repositoryLocator;
+        public static void CreateObjectRepository()
+        {
+            i = 1;
+            String s = ApplicationConfiguration.Browser_Name;
+            Console.WriteLine("baseurl"+s);
+          
+            repositoryQuestion = new StringBuilder("");
+            repositoryValue = new StringBuilder("");
+            repositoryLocator = new StringBuilder("");
+            pageCount = ExcelUtil.SetExcelFile(System.Environment.CurrentDirectory + @"\Framework_01\ObjectRepository\ObjectRepository.xlsx", 1);
+            pageCounter = 1;
+            do
+            {
+                ExcelUtil.SetExcelSheet(pageCounter);
+                do
+                {
+                    repositoryQuestion.Clear();
+                    repositoryValue.Clear();
+                    repositoryLocator.Clear();
+
+                    repositoryQuestion.Append(ExcelUtil.GetCellData(i, 1));
+                    repositoryValue.Append(ExcelUtil.GetCellData(i, 2));
+
+                    repositoryLocator.Append(ExcelUtil.GetCellData(i, 3));
+
+                    objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode()), repositoryLocator.ToString());
+                    repositoryLocator.Clear();
+                    repositoryLocator.Append(ExcelUtil.GetCellData(i, 4));
+
+                    objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode()) + 10, repositoryLocator.ToString());
+
+                    i++;
+                }
+                while (!(ExcelUtil.GetCellData(i, 1) == null));
+                pageCounter++;
+
+            } while (pageCounter <= pageCount);
+
+            ExcelUtil.CloseExcelFile();
+            FileStream fs = new FileStream(System.Environment.CurrentDirectory + @"\Framework_01\ObjectRepository\objectrepository.binary", FileMode.Create, FileAccess.Write, FileShare.None);
+            BinaryFormatter bf = new BinaryFormatter();
+            bf.Serialize(fs, objectRepository);
+            Console.WriteLine("Object Repository Created / Updated Successfully");
+            fs.Close();
+            //To read the data from binary file
+            FileStream fsin = new FileStream(System.Environment.CurrentDirectory + @"\Framework_01\ObjectRepository\objectrepository.binary", FileMode.Open, FileAccess.Read, FileShare.None);
+            objectRepository = (Dictionary<int, string>)bf.Deserialize(fsin);
+            fsin.Close();
+        }
+    }
+}
+
+using Coypu;
+using Framework_01.Utility;
+using System;
+using NUnit.Framework;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Threading;
+using Framework_01.Config;
+
+namespace Framework_01.TestController
+{
+
+    public class TestControl
+    {
+        static BrowserSession browser;
+        static Dictionary<int, string> objectRepository = new Dictionary<int, string>();
+        static FileStream fsin;
+        static int testCaseNumber, testDataRow, testDataCount, testCount, testCounter;
+
+        [SetUp]
+        public void SetUp()
+        {
+            ObjectRepository.ObjectRepository.CreateObjectRepository();
+            var bf = new BinaryFormatter();
+            fsin = new FileStream(System.Environment.CurrentDirectory + @"\Framework_01\ObjectRepository\objectrepository.binary", FileMode.Open, FileAccess.Read, FileShare.None);
+
+            objectRepository = (Dictionary<int, string>)bf.Deserialize(fsin);
+            fsin.Close();
+            System.Console.Write("setup");
+            browser = BrowserUtil.GetBrowserSession("Chrome");
+        }
+        [Test, TestCaseSource("TestData")]
+        public void TestMethod2(List<string> testData)
+        {
+            testDataCount = 1;
+
+            browser.Visit(ApplicationConfiguration.UrlBase_Legacy);
+           // browser.Visit("https://www2.my.test2.commbiz.online.cba/logon/usermaintenance/login.aspx ");
+            //testCount = ExcelUtil.SetExcelFile(System.Environment.CurrentDirectory + @"\Framework_01\TestData\TestData.xlsx", 1);
+            testCount = ExcelUtil.SetExcelFile(Utility.Utility.CurrentDirectory + "\\TestData.xlsx", 1);
+            ExcelUtil.SetExcelSheet(Int32.Parse(testData[0]));
+            testCounter = 1;
+
+            do
+            {
+
+                if (testData[testDataCount - 1] != null || testData[testDataCount - 1] != "")
+                {
+
+                    BrowserAction.BrowserAction.SendCommand(browser, objectRepository[ExcelUtil.GetCellData(testDataCount + 1, 1).GetHashCode()], objectRepository[ExcelUtil.GetCellData(testDataCount + 1, 1).GetHashCode() + 10], testData[testDataCount]);
+
+                }
+                testDataCount++;
+
+            } while (testDataCount < testData.Count);
+
+
+            ExcelUtil.CloseExcelFile();
+
+
+        }
+        private static IEnumerable<TestCaseData> TestData
+        {
+
+            get
+            {
+
+
+                testCount = ExcelUtil.SetExcelFile(Utility.Utility.CurrentDirectory+"\\TestData.xlsx", 1);
+               // Console.WriteLine("Curr directory" + System.Environment.CurrentDirectory);
+                // ExcelUtil.SetExcelSheet(1);
+               
+                testCaseNumber = 2;
+                testCounter = 1;
+                do
+                {
+
+                    ExcelUtil.SetExcelSheet(testCounter);
+
+                    testCaseNumber = 2;
+                    while (!(ExcelUtil.GetCellData(1, testCaseNumber) == null))
+                    {
+                        List<string> ar1 = new List<string>();
+                        ar1.Add("" + testCounter);
+                        testDataRow = 2;
+                        do
+                        {
+
+                            ar1.Add(ExcelUtil.GetCellData(testDataRow, testCaseNumber));
+                            testDataRow = testDataRow + 1;
+                        } while (!(ExcelUtil.GetCellData(testDataRow, testCaseNumber) == null));
+
+                        yield return new TestCaseData(ar1).SetName("Test case" + "_" + ExcelUtil.GetCellData(1, testCaseNumber));
+                        testCaseNumber = testCaseNumber + 1;
+
+
+                    }
+                    testCounter++;
+                } while (testCounter <= testCount);
+                ExcelUtil.CloseExcelFile();
+
+            }
+
+        }
+        [TearDown]
+        public void CleanUp()
+        {
+            browser.Dispose();
+
+            System.Console.Write("CleanUp");
+        }
+    }
+}
+
+using Coypu;
+using Coypu.Drivers.Selenium;
+using System;
+
+namespace Framework_01.Utility
+{
+    class BrowserUtil
+    {
+
+        public static BrowserSession GetBrowserSession(string browserType)
+        {
+
+            var sessionConfiguration = new SessionConfiguration();
+            sessionConfiguration.Driver = typeof(SeleniumWebDriver);
+            sessionConfiguration.Timeout = TimeSpan.FromSeconds(10);
+            switch (browserType)
+            {
+                case "Chrome":
+                    sessionConfiguration.Browser = Coypu.Drivers.Browser.Chrome;
+                    break;
+                case "Firefox":
+                    sessionConfiguration.Browser = Coypu.Drivers.Browser.Firefox;
+                    break;
+
+                case "Iexplorer":
+                    sessionConfiguration.Browser = Coypu.Drivers.Browser.InternetExplorer;
+                    break;
+
+            }
+
+            return (new BrowserSession(sessionConfiguration));
+
+
+        }
+    }
+}
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+using Excel = Microsoft.Office.Interop.Excel;
+
+namespace Framework_01.Utility
+{
+    public class ExcelUtil
+    {
+        public static string value;
+        static Excel.Application xlApp;
+        static Excel.Workbook xlWorkbook;
+        static Excel._Worksheet xlWorksheet;
+        static Excel.Range xlRange;
+
+        public static int SetExcelFile(string filePath, int sheetNumber)
+        {
+            xlApp = new Excel.Application();
+            xlWorkbook = xlApp.Workbooks.Open(filePath);
+            return xlWorkbook.Sheets.Count;
+        }
+        public static void SetExcelSheet(int sheetNumber)
+        {
+            xlWorksheet = (Excel.Worksheet)xlWorkbook.Sheets[sheetNumber];
+
+            xlRange = xlWorksheet.UsedRange;
+        }
+        public static void CloseExcelFile()
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Marshal.ReleaseComObject(xlRange);
+            Marshal.ReleaseComObject(xlWorksheet);
+
+            xlWorkbook.Close();
+            Marshal.ReleaseComObject(xlWorkbook);
+
+            xlApp.Quit();
+            Marshal.ReleaseComObject(xlApp);
+
+        }
+        public static String GetCellData(int row, int col)
+        {
+            value = ((Excel.Range)xlWorksheet.Cells[row, col]).Value;
+            return value;
+        }
+
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System;
+
+using NUnit.Framework;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Coypu;
+using Framework_01.TestController;
+
+namespace Framework_01.Utility
+{
+    public class Utility
+    {
+    
+            public static string CurrentDirectory
+            {
+                get
+                {
+                    Type type = typeof(TestControl);
+                    FileInfo path = new FileInfo(type.Assembly.Location);
+                    return path.DirectoryName.ToString();
+                    //return Path.Combine(System.Environment.CurrentDirectory, "AcceptanceTests", "bin");
+
+                }
+            }
+
+        
+    }
+}
