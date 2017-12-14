@@ -1,0 +1,96 @@
+http://www.andyfrench.info/2015/03/running-nunit-tests-with-jenkins.html
+
+Always copy the entire solution to below folder:
+
+C:\Users\padmaske\Documents\Jenkins\workspace then run the tests
+
+Install Nunit console runner in system (NUnit.ConsoleRunner.3.7.0)
+
+"C:\project_framework\Framework_01\packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe" --test=Framework_01.TestController.TestControl.Test_case_TC01 C:\project_framework\Framework_01\Framework_01\bin\T2\Framework_01.dll
+
+"C:\project_framework\Framework_01\packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe" --test=Framework_01.TestController.TestControl.Test_case_TC01 , Framework_01.TestController.TestControl.Test_case_TC02  C:\project_framework\Framework_01\Framework_01\bin\T2\Framework_01.dll
+
+"C:\project_framework\Framework_01\packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe" C:\project_framework\Framework_01\Framework_01\bin\T2\Framework_01.dll
+
+
+xcopy /Y /S "$(ProjectDir)TestData\$(ConfigurationName)\*" "$(TargetDir)"   Add under build evenets
+
+
+
+browser.SaveScreenshot(@"C:\project_framework\Framework_01\TestResults\my_scenario_2013‐06‐18_16_53.jpg", ImageFormat.Jpeg);
+
+
+
+
+
+using Framework_01.Utility;
+using Framework_01.Config;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+namespace Framework_01.ObjectRepository
+{
+    public class ObjectRepository
+    {
+        static Dictionary<int, String> objectRepository = new Dictionary<int, string>();
+        static int i, pageCount, pageCounter;
+        static StringBuilder repositoryQuestion, repositoryValue, repositoryLocator;
+        public static void CreateObjectRepository()
+        {
+            i = 1;
+            String s = ApplicationConfiguration.Browser_Name;
+            Console.WriteLine("baseurl" + s);
+
+            repositoryQuestion = new StringBuilder("");
+            repositoryValue = new StringBuilder("");
+            repositoryLocator = new StringBuilder("");
+            pageCount = ExcelUtil.SetExcelFile(System.Environment.CurrentDirectory + @"\Framework_01\ObjectRepository\ObjectRepository.xlsx", 1);
+            pageCounter = 1;
+            do
+            {
+                ExcelUtil.SetExcelSheet(pageCounter);
+                do
+                {
+                    repositoryQuestion.Clear();
+                    repositoryValue.Clear();
+                    repositoryLocator.Clear();
+
+                    repositoryQuestion.Append(ExcelUtil.GetCellData(i, 1));
+                    repositoryValue.Append(ExcelUtil.GetCellData(i, 2));
+
+                    repositoryLocator.Append(ExcelUtil.GetCellData(i, 3));
+                    if (!(objectRepository.ContainsKey(((repositoryQuestion.ToString()).GetHashCode()))))
+                    {
+                        objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode()), repositoryLocator.ToString());
+                    }
+
+                    repositoryLocator.Clear();
+                    repositoryLocator.Append(ExcelUtil.GetCellData(i, 4));
+                    if (!(objectRepository.ContainsKey(((repositoryQuestion.ToString()).GetHashCode()) + 10)))
+                    {
+                        objectRepository.Add(((repositoryQuestion.ToString()).GetHashCode()) + 10, repositoryLocator.ToString());
+                    }
+
+
+                    i++;
+                }
+                while (!(ExcelUtil.GetCellData(i, 1) == null));
+                pageCounter++;
+
+            } while (pageCounter <= pageCount);
+
+            ExcelUtil.CloseExcelFile();
+            FileStream fs = new FileStream(System.Environment.CurrentDirectory + @"\Framework_01\ObjectRepository\objectrepository.binary", FileMode.Create, FileAccess.Write, FileShare.None);
+            BinaryFormatter bf = new BinaryFormatter();
+            bf.Serialize(fs, objectRepository);
+            Console.WriteLine("Object Repository Created / Updated Successfully");
+            fs.Close();
+            //To read the data from binary file
+            FileStream fsin = new FileStream(System.Environment.CurrentDirectory + @"\Framework_01\ObjectRepository\objectrepository.binary", FileMode.Open, FileAccess.Read, FileShare.None);
+            objectRepository = (Dictionary<int, string>)bf.Deserialize(fsin);
+            fsin.Close();
+        }
+    }
+}
