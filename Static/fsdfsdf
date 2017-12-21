@@ -1,0 +1,238 @@
+https://wiki.sei.cmu.edu/confluence/display/java/Java+Coding+Guidelines
+
+
+http://www.baeldung.com/java-memory-management-interview-questions
+
+Stack
+The size of the stack will vary as methods and functions create and delete local variables as needed.
+Memory is allocated and then subsequently freed without you needing to manage the memory allocation.
+Stack has size limits, which can vary according to the operating system you use.
+Variables that are stored on the stack exist for as long as the function that created them are running.
+
+Heap
+Memory is not managed automatically nor is it as tightly managed by the central processing unit the way stack is managed. You would need to free allocated memory yourself when these blocks are no longer needed.
+The heap is prone to memory leaks, where memory is allocated to unused objects and will not be available to processes other than that.
+There is no size limit in the heap.
+Compared to stack, objects in the heap are much slower to access. It is also slower to write to the memory on the heap.
+
+
+
+
+For eception handling try & catch OR fibnally is required... catch is optional
+
+Same varibale can exist in derived & parent class but after inherirtance parent class variable is hidden
+
+Downcasting not allowed in java
+We can assign the object of parent to Child, We can assign the reference of child to parent
+
+Collection is used handle the group of objects
+
+*************
+
+Exception:
+Throwable is super class of Exception as well as Error. 
+
+throw is a keyword in java which is used to throw an exception manually.
+
+throws is also a keyword in java which is used in the method signature to indicate that this method may throw mentioned exceptions. The caller to such methods must handle the mentioned exceptions either using try-catch blocks or using throws keyword
+
+Throwable is a super class for all types of errors and exceptions in java. This class is a member of java.lang package
+this is used to create the customised exception
+
+class MyException extends Throwable
+{
+           //Customized Exception class
+}
+ 
+class ThrowAndThrowsExample
+{
+    void method() throws MyException
+    {
+        MyException e = new MyException();
+ 
+        throw e;
+    }
+}
+
+
+http://www.studytonight.com/java/abstract-class
+
+
+**********************************
+iterface always public - yes
+
+Always method inside interafec should be puclic always not have priavte & protected
+
+An interface does not contain any constructors. - But that can have methods with same interafce name
+
+If intefface implemented in abstarct class not compalsury that to implement all the interface methods
+
+interface can ingherit the another multiple interfaces
+
+All variables declared inside interface are implicitly public static final variables(constants).
+
+Abstarct class extended in normal class & all the abstarct must be implemented
+
+Interface cannot implement a class.
+Interface can be nested inside another interface.
+
+
+
+interface A{
+    int a=3;
+    public void A();
+    public int B();
+}
+interface C extends A
+{
+    public void C1();
+  
+}
+ abstract class B implements A{
+    public void B1()
+    {
+     
+        System.out.println(A.a);
+    }
+    public abstract void B2();
+    
+     public int B()
+     {
+         return 1;
+     }
+  //  public abstract int  B();
+    
+} 
+class D extends B{
+
+    public  void B2()
+    {
+        
+    }
+    public void A()
+    {
+        
+    }
+    public int B()
+    {
+      return 2;  
+    }
+    
+    
+    
+}
+
+public  class MyClass implements C {
+    public static void main(String args[]) {
+        int x=10;
+        int y=25;
+        int z=x+y;
+        System.out.println("Sum of x+y = " + z);
+    
+       D bb=new D();
+       bb.B1();
+        MyClass a= new MyClass();
+        a.A();
+    }
+    public void A()
+    {
+        System.out.println("print A implemented at My class");
+    }
+    public int  B()
+    {
+        return 1;
+    }
+     public void C1()
+     {
+         
+     }
+}
+
+
+
+
+
+*****
+
+
+Abstarct class can have constructor
+Abstarct class extended in normal class & all the abstarct must be implemented
+
+if abstarct class have implemented intefafce & interface method implementation is missing then this should be implemented in class where anstartct class inherited
+
+Abstract classes are not Interfaces. They are different, we will study this when we will study Interfaces.
+An abstract class may or may not have an abstract method. But if any class has even a single abstract method, then it must be declared abstract.
+Abstract classes can have Constructors, Member variables and Normal methods( But all are by default non-static & can be used with instance of extended class).
+Abstract classes are never instantiated.
+When you extend Abstract class with abstract method, you must define the abstract method in the child class, or make the child class abstract.
+
+interface A{
+    int a=3;
+    public void A();
+    public int B();
+}
+interface C extends A
+{
+    public void C1();
+  
+}
+
+
+abstract class D implements C{
+ int c;   
+}
+class E extends D
+{
+      public void C1()
+      {
+         this.c=3;
+         System.out.println( this.c);
+      }
+      
+      public void A()
+      {
+          
+      }
+    public int B()
+    {
+        return 1;
+    }
+    
+}
+
+public  class MyClass implements C {
+    public static void main(String args[]) {
+        int x=10;
+        int y=25;
+        int z=x+y;
+        System.out.println("Sum of x+y = " + z);
+    
+      E ee= new E();
+      ee.C1();
+      
+        MyClass a= new MyClass();
+        a.A();
+    }
+    public void A()
+    {
+        System.out.println("print A implemented at My class");
+    }
+    public int  B()
+    {
+        return 1;
+    }
+     public void C1()
+     {
+         
+     }
+}
+
+
+********************
+Runtime Polymorphism or Dynamic method dispatch
+Parent p= new Parent();
+Child c=new Child();
+c=p;
+///Upcasting
+
+
