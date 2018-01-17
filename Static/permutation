@@ -1,0 +1,111 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Permutation
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            String str = Console.ReadLine();
+            String temp1, temp2 = "";
+            StringBuilder[] strb = new StringBuilder[CalculatePermutation(str.Length)];
+            for (int i = 0; i < CalculatePermutation((str.Length)); i++)
+            {
+                strb[i] = new StringBuilder();
+            }
+            int Perm_N, Perm_K, k = 0;
+            Perm_N = CalculatePermutation(str.Length);
+            Perm_K = CalculatePermutation((str.Length) - 1);
+            for (int i = 0; i < (str.Length); i++)
+            {
+                for (int j = 0; j < Perm_K; j++)
+                {
+                    strb[k++].Append(str[i]);
+                }
+            }
+
+            int m = 0;
+            int prev_l = 0;
+            int curr_l = str.Length - 1;
+            Boolean flag = false;
+            for (int i = str.Length - 1; i > 0; i--)
+            {
+                m = 0;
+                prev_l = 0;
+                curr_l = str.Length - 1;
+                do
+                {
+                    if (curr_l == 0 || curr_l == 1)
+                    {
+                        curr_l = str.Length - 1;
+                    }
+
+                    temp1 = (strb[m]).ToString();
+                    flag = false;
+                    for (int l = curr_l; l >= 0; l--)
+                    {
+                        if (!(temp1.Contains(str[l])))
+                        {
+                            if (!(temp2.Equals(str[l])) && prev_l != l)
+                            {
+                                temp2 = "" + str[l];
+                                prev_l = l;
+                                curr_l = l;
+                                flag = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!(flag))
+                    {
+                        curr_l = str.Length - 1;
+                        for (int l = curr_l; l >= 0; l--)
+                        {
+                            if (!(temp1.Contains(str[l])))
+                            {
+                                if (!(temp2.Equals(str[l])) && prev_l != l)
+                                {
+                                    temp2 = "" + str[l];
+
+                                    prev_l = l;
+                                    curr_l = l;
+                                    flag = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    for (int j = 0; j < CalculatePermutation(i - 1); j++)
+                    {
+                        strb[m++].Append(temp2);
+                    }
+                } while (m < Perm_N);
+            }
+            Console.WriteLine("*****************");
+            for (int i = 0; i < CalculatePermutation(str.Length); i++)
+            {
+                Console.WriteLine(strb[i]);
+            }
+            Console.WriteLine("*****************");
+            Console.ReadLine();
+        }
+        public static int CalculatePermutation(int num)
+        {
+            if (num == 1)
+            {
+               return 1;
+            }
+            if (num == 0)
+            {
+                return 1;
+            }
+            return (num * CalculatePermutation(num - 1));
+        }
+    }
+}
+
