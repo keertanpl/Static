@@ -1,0 +1,77 @@
+dfasff
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using NUnit.Framework;
+using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Support;
+using System.Threading;
+using System.IO;
+using System.Drawing;
+using System.Drawing.Imaging;
+using OpenQA.Selenium.Interactions;
+
+namespace UnitTestProject1
+{
+
+    class Class1
+    {
+        IWebDriver driver;
+
+
+
+        [SetUp]
+        public void Setup()
+        {
+            driver = new ChromeDriver(@"\\nav01001fpds01-201s\q_hme_05$\padmaske\data\Visual Studio 2015\Projects\UnitTestProject2\UnitTestProject2\bin");
+
+
+
+
+
+        }
+        [Test, TestCaseSource("TestData")]
+        public void Userlogsin(int i)
+        {
+
+            Console.Write(i);
+            driver.Url = "https://www.w3schools.com/html/html_tables.asp";
+            driver.Manage().Window.Maximize();
+            Thread.Sleep(3000);
+            List<IWebElement> el=new List<IWebElement>( driver.FindElements(By.XPath("//table[@id='customers']/tbody/tr")));
+            IWebElement e2;
+            int k;
+           for(int j=0;j<el.Count;j++)
+            {
+                k = j + 1;
+                e2=el[j].FindElement(By.XPath("//tr["+k+"]/td"));
+                Console.WriteLine(e2.Text);
+              //  Console.WriteLine(j);
+            }
+        }
+
+        private static IEnumerable<TestCaseData> TestData
+        {
+            get
+            {
+
+                yield return new TestCaseData(0).SetName("Table program");
+              
+            }
+
+        }
+
+        [TearDown]
+        public void EndTest()
+        {
+            Thread.Sleep(1000);
+            driver.Close();
+        }
+    }
+
+
+}
