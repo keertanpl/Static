@@ -1,0 +1,2 @@
+  myRootElement.SendKeys(Keys.Enter);
+     myRootElement.SendKeys(Keys.ArrowDown);
