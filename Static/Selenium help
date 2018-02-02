@@ -45,4 +45,7 @@ Eg:
  
  ****Can't run the same fixture in parallel*******
  
- 
+ [TestFixture] attrivbute used to pass the paramnetrts to test 
+ Like
+ @Test
+ @Paramneters({browser},{user})
