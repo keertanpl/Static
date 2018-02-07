@@ -1,0 +1,87 @@
+https://www.udemy.com/framework-development-with-selenium-csharp-advanced/
+https://www.codeproject.com/Articles/1080066/Advanced-WebDriver-Tips-and-Tricks-Part
+https://automatetheplanet.com/advanced-webdriver-tips-tricks-part-1/
+
+5. Execute Tests in a Headless Browser
+****Install PhantomJS,Selenium.PhantomJS.WebDriver,Selenium.WebDriver.PhantomJS in NUget packegaes
+
+PhantomJS is a headless WebKit scriptable with a JavaScript API. It has fast and native support for various web standards: DOM handling, CSS selector, JSON, Canvas, and SVG. In order to be able to use the PhantomJSDriver in your code, 
+
+you first need to download its binaries.
+
+[TestMethod]
+public void ExecuteInHeadlessBrowser()
+{
+    this.driver = new PhantomJSDriver(
+        @"D:ProjectsPatternsInAutomation.TestsWebDriver.Series.TestsDrivers");
+    this.driver.Navigate().GoToUrl(@"http://automatetheplanet.com");
+    this.WaitUntilLoaded();
+    IJavaScriptExecutor js = driver as IJavaScriptExecutor;
+    string title = (string)js.ExecuteScript("return document.title");
+    Debug.WriteLine(title);
+}
+
+
+[TestFixture]
+public class PhantomjsTests
+{
+    private IWebDriver _driver;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _driver = new PhantomJSDriver();
+    }
+
+    [Test]
+    public void should_be_able_to_search_google()
+    {
+        _driver.Navigate().GoToUrl("http://www.google.com");
+
+        IWebElement element = _driver.FindElement(By.Name("q"));
+        string stringToSearchFor = "BDDfy";
+        element.SendKeys(stringToSearchFor);
+        element.Submit();
+
+        Assert.That(_driver.Title, Is.StringContaining(stringToSearchFor));
+        ((ITakesScreenshot)_driver).GetScreenshot().SaveAsFile("google.png", ImageFormat.Png);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _driver.Quit();
+    }
+}   
+
+We can use htmlunitdriver also
+
+o use HtmlUnit you need to use the RemoteWebDriver and pass in the desired capabilities for it. Beloe code will help you to run application using HTMLUnitDriver using .Net. Note that you’ll need to run the remote WebDriver server to 
+
+useHtmlUnit from C#
+
+1. There is no Class HtmlUnit  in C# (dlls for Selenium)
+2.  HtmlUnit  is really fast
+We can walk through in this method:
+1. Install  Selenium Server and start it using java -jar selenium server path
+2.  To get an instance of the HtmlUnit Driver.
+IWebDriver drive = new RemoteWebDriver(DesiredCapabilities.HtmlUnit());
+
+---------------------------------------------------
+using System;
+using System.Configuration;
+using OpenQA.Selenium.Remote;
+
+
+
+               public static IWebDriver WebDriver;
+
+
+
+               var remoteServer = new Uri("http://localhost:4444/wd/hub/");
+               DesiredCapabilities desiredCapabilities = DesiredCapabilities.HtmlUnit();
+               WebDriver = new RemoteWebDriver(remoteServer, desiredCapabilities);
+               desiredCapabilities.IsJavaScriptEnabled = true;
+               WebDriver.Manage().Timeouts().ImplicitlyWait(new TimeSpan(0, 0, 30));
+               //go to url 
+               WebDriver.Navigate().GoToUrl("http://google.co.in");
