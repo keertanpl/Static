@@ -1,0 +1,170 @@
+  private static IEnumerable<TestCaseData> CreateUserprofileTestData()
+        {
+            return TestDataHelper.GetTestData("CreateUserprofileTestData.csv", (csv, row) =>
+            {
+                var testcasename = csv.GetField<string>(0);
+                var username = csv.GetField<string>(5);
+                var password = csv.GetField<string>(6);
+                var otp = csv.GetField<string>(7);
+                var Firstname = csv.GetField<string>(8);
+                var LastName = csv.GetField<string>(9);
+                var Email = csv.GetField<string>(10);
+                var Mobile = csv.GetField<string>(11);
+                var Recipient = csv.GetField<string>(12);
+
+                return new object[] { testcasename, username, password, otp, Firstname, LastName, Email, Mobile, Recipient };
+            });
+
+        }
+    }
+    }
+    
+    
+    
+    
+    using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Coypu;
+using NUnit.Framework;
+using RelevantCodes.ExtentReports;
+using System.Threading;
+
+namespace AcceptanceTest.Web.Framework.Infrastructure
+{
+
+    public class ExtentUtil
+    {
+
+        public ExtentReports extent;
+        public ExtentTest testlog;
+        public string LocalReporPath;
+        public string filepath;
+        public string testname;
+
+        public void CreateExtentReport(/*String methodname*/)
+        {
+
+            //Create ExtentReport Instance
+            var TestReportDirPath = System.IO.Path.Combine(MyEnvironment.CurrentDirectory, "TestResults");
+            LocalReporPath = new Uri(TestReportDirPath).LocalPath;
+            LocalReporPath = LocalReporPath + "/"+ DateTime.Now.ToString("yyyyMMdd_HHmmss")+ "_Test Results";
+            System.IO.Directory.CreateDirectory(LocalReporPath);
+
+            var fileNameBase = string.Format("{0}_{1}",
+                  "/"+ DateTime.Now.ToString("yyyyMMdd_HHmmss"), "TestReport.html");
+
+            // filepath = LocalReporPath + "/TestReport.html";
+            //filepath = LocalReporPath+string.Format(fileNameBase, "/TestReport.html");
+            filepath = LocalReporPath + fileNameBase;
+            if (!System.IO.File.Exists(filepath))
+            {
+                var fs = System.IO.File.Create(filepath);
+                fs.Close();
+                
+            }
+            extent = new ExtentReports(filepath, false, DisplayOrder.OldestFirst);
+            //testlog = extent.StartTest(methodname);
+
+        }
+
+        public void StartTest(string FullName)
+        {
+            if (extent != null)
+            {
+                testlog = extent.StartTest(TestContext.CurrentContext.Test.FullName);
+
+            }
+        }
+
+
+        public void closeExtent()
+        {
+            if (extent != null)
+            {
+                //extent.EndTest(testlog);
+                extent.Flush();
+                extent.Close();
+            }
+        }
+
+        public void EndTest()
+        {
+            if (extent != null)
+            {
+                extent.EndTest(testlog);
+                extent.Flush();
+            }
+        }
+
+
+        public ExtentUtil()
+        {
+            // TODO: Complete member initialization
+            extent = null;
+            testlog = null;
+        }
+    }
+
+}
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Coypu;
+using System.Threading;
+using NUnit.Framework;
+using PostSharp.Aspects;
+using RelevantCodes.ExtentReports;
+
+
+namespace AcceptanceTest.Web.Framework.Infrastructure
+{
+        [Serializable]
+        public class TakeScreenShotAttribute : OnMethodBoundaryAspect
+        {
+            public override void OnSuccess(MethodExecutionArgs args)
+            {
+           if (!IgnoreScreenShot(args))
+               
+                {
+                    BrowserSession browserSession = (BrowserSession)Thread.GetData(Thread.GetNamedDataSlot("BrowserSessionObj"));
+                    ExtentUtil extentUtil = (ExtentUtil)Thread.GetData(Thread.GetNamedDataSlot("ExtentUtilObj"));
+                    string screenShotFilePath = browserSession.TakeScreenshot(args.Method.Name);
+                    extentUtil.testlog.Log(LogStatus.Info, "Snapshot below: " + extentUtil.testlog.AddScreenCapture(screenShotFilePath));
+                    extentUtil.testlog.Log(LogStatus.Pass, args.Method.Name);
+                }
+
+            }
+            public override void OnException(MethodExecutionArgs args)
+            {
+                
+              if (!IgnoreScreenShot(args))
+                {
+                    BrowserSession browserSession = (BrowserSession)Thread.GetData(Thread.GetNamedDataSlot("BrowserSessionObj"));
+                    ExtentUtil extentUtil = (ExtentUtil)Thread.GetData(Thread.GetNamedDataSlot("ExtentUtilObj"));
+                    string screenShotFilePath = browserSession.TakeScreenshot(args.Method.Name);
+                    extentUtil.testlog.Log(LogStatus.Info, "Snapshot below: " + extentUtil.testlog.AddScreenCapture(screenShotFilePath));
+                    extentUtil.testlog.Log(LogStatus.Fail, args.Method.Name);
+                }
+            }
+
+            private bool IgnoreScreenShot(MethodExecutionArgs args)
+            {
+                string methodName = args.Method.Name;
+                if (methodName.StartsWith("get_") || methodName.StartsWith("set_")
+                    || methodName.StartsWith(".ctor") || (!ApplicationConfiguration.IsScreenShotEnabled))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+}
